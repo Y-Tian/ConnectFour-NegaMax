@@ -1,3 +1,6 @@
+/*
+Includes go here
+*/
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -10,7 +13,7 @@
 using namespace std;
 
 /*
-Global variables
+Global variables go here
 */
 const int w = 7;//columns
 const int h = 6;//rows
@@ -64,8 +67,8 @@ Definitions
 #define INT_MAX 2147483647;
 
 /*
-Main function
-Returns 0 when the program is terminated.
+Prints the board array to terminal
+For testing purposes
 */
 void print(Memory &mem)
 {
@@ -84,6 +87,11 @@ void print(Memory &mem)
     }
 }
 
+/*
+Main function
+
+Returns 0 when the program is terminated.
+*/
 int main()
 {
   cout << "Enter logfileName: " << endl;
@@ -120,20 +128,18 @@ void closeLog()
 
 /*
 This function writes to the log file
-
-Returns 1 if it successfully writes
-Returns -1 if it unsuccessfully writes
+Includes the time and date along with each function call
 */
 void writeLog(Memory &mem, char functionName[])
 {
-  time_t sysTimeMS = time(nullptr);
+  time_t sysTimeMS = time(nullptr);//gets the system time
   //long double sysTimeMS = time(0)*1000;
   //outfile << sysTimeMS << "\t" << "Board State: " << mem.player << endl;
   outfile << asctime(localtime(&sysTimeMS)) << "\t" << "Function: " << functionName << endl;
 }
 
 /*
-getTime
+This function gets the system time in microseconds
 */
 unsigned long long getTimeMicrosec()
 {
@@ -143,10 +149,9 @@ unsigned long long getTimeMicrosec()
 }
 
 /*
-Function that allows players to play again after the first game ends
-Returns 0 if an error occured in the game.
+This function allows the game to begin and initializes the opening functions
 
-***Need to implement ability to play again.
+Returns 0 if an error occured in the game.
 */
 int openGame(Memory &mem)
 {
@@ -193,10 +198,10 @@ void build(Memory &mem)
 
 /*
 This function is the main play function where the human player plays against the ai
+Unless the board has possible plays left, this function will continue looping
+
 Returns > 0 if game ran normally
 Returns -1 if game was abnormal
-
-***Need to implement ability to have human player go second.
 */
 int play(Memory &mem)
 {
@@ -273,6 +278,7 @@ int play(Memory &mem)
 
 /*
 This function sets the AI difficulty
+Allows human to set it
 
 Returns the depth level if it is within the bounds
 */
@@ -302,6 +308,7 @@ int computerDifficulty(Memory &mem)
 This function determines who played the last piece that won the game
 
 Returns > 0 if it can determine who gameWon
+Returns 0 if there is a stalemate
 Returns < 0 if something went wrong
 */
 int endScreen(Memory &mem)
@@ -355,6 +362,7 @@ void display(Memory &mem)
 
 /*
 This function determines whether or not the current column can be played
+
 Returns true if piece can be played at that columns
 Returns false if that piece cannot be played
 */
@@ -390,6 +398,8 @@ void makeMove(Memory &mem)
 
 /*
 This function determines whether or not at the current state, the game is won by the current player
+This method purely checks for horizontal and vertical
+
 Returns true if game is Finished
 Returns false if game is not Finished
 */
@@ -448,6 +458,7 @@ bool check(Memory &mem)
 /*
 This function is a helper function for check()
 Checks the diagonal win condition in the current board state
+
 Returns true if diagonal win
 Returns false if no diagonal win
 */
@@ -465,31 +476,47 @@ bool checkDiagonal(Memory &mem)
   int diagonal2[6] = {0};
 
   //fill diagonal 1
-  int min = (x < y) ? x : y; //min between x and y
+  int min;
+  if(x < y)
+  {
+    min = x;
+  }
+  else
+  {
+    min = y;
+  }
   int startX = x - min;
   int startY = y - min;
   int i = 0; //used for x
   int j = 0; //used for y
   int k = 0; //counter for diagonal
 
-  while(startX+i<7 && startY+j<6)
+  while(startX + i < 7 && startY + j < 6)
   {
-	  diagonal1[k] = mem.board[startX+i][startY+j];
+	  diagonal1[k] = mem.board[startX + i][startY + j];
 	  i++;
     j++;
     k++;
   }
 
   //fill diagonal 2
-  min = (6 - x < y) ? 6 - x : y;
-  int startX2 = x+min;
-  int startY2 = y-min;
+  if(6 - x < y)
+  {
+    min = 6 - x;
+  }
+  else
+  {
+    min = y;
+  }
+  int startX2 = x + min;
+  int startY2 = y - min;
   i = 0;
   j = 0;
   k = 0;
 
-  while(startX2-i>0 && startY2+j<6){
-	  diagonal2[k] = mem.board[startX2-i][startY2+j];
+  while(startX2 - i > 0 && startY2 + j < 6)
+  {
+	  diagonal2[k] = mem.board[startX2 - i][startY2 + j];
 	  i++;
     j++;
     k++;
@@ -497,14 +524,27 @@ bool checkDiagonal(Memory &mem)
 
   int count1 = 0;
   int count2 = 0;
-  for(i=0; i<6; i++){
-	  if(diagonal1[i]==player) count1 ++;
-	  if(diagonal2[i]==player) count2 ++;
+  for(i = 0; i < 6; i++)
+  {
+	  if(diagonal1[i] == player)
+    {
+      count1++;
+    }
+	  if(diagonal2[i] == player)
+    {
+      count2++;
+    }
   }
-  if(count1>=4||count2>=4) return true;
+  if(count1 >= 4 || count2 >= 4)
+  {
+    return true;
+  }
   return false;
 }
 
+/*
+This function copys all of the original struct's data into a new struct
+*/
 void copyStruct(Memory &mem, Memory &mem2)
 {
   //Write logging
@@ -539,6 +579,7 @@ void copyStruct(Memory &mem, Memory &mem2)
 This function is the computer's turn
 Initializes the negaMax algorithm by playing the turn's piece in every columns
 Uses a seperate copy of Memory, mem2, in order to look deeper into the game
+
 Returns the column that the AI determines to be the highest scoring column
 */
 int computerTurn(Memory &mem, int depth)
@@ -578,9 +619,8 @@ int computerTurn(Memory &mem, int depth)
 This function is a recursive negaMax algorithm
 It executes every move that can be played by the AI to a certain depth and remembers the highest scoring column
 Stops when the game is won or until it hits a depth of 0
-Returns the highest score that can be played by the AI
 
-***Not tested
+Returns the highest score that can be played by the AI
 */
 int negaMax(Memory &mem, int depth, int alpha, int beta)
 {
@@ -645,9 +685,8 @@ int negaMax(Memory &mem, int depth, int alpha, int beta)
 
 /*
 This function calculates the final heuristic of the board based on player pieces on the board
-Returns the result of that heuristic
 
-***Not tested
+Returns the result of that heuristic
 */
 int heuristic(Memory &mem)
 {
@@ -743,6 +782,9 @@ int getMax(Memory &mem, int a, int b)
   return max;
 }
 
+/*
+This function gets the column being played and sends that data to the Arduino via echo commands on the terminal
+*/
 void echo(Memory &mem)
 {
   //echo
@@ -761,6 +803,9 @@ void echo(Memory &mem)
   i = system(cstr);
 }
 
+/*
+This function sends to the Arduino when the game ends and lets it know where the winning line of 4 was
+*/
 void endGameResultsEcho(Memory &mem)
 {
   int r1;
@@ -839,27 +884,27 @@ void endGameResultsEcho(Memory &mem)
     else exit (EXIT_FAILURE);
   i = system(cstr);
 
-  //echo winning set of 2 coordinates
-  // int j;
-  // string s = "echo";
-  // string c = to_string(c1);
-  // string p = to_string(r1);
-  // string str_coor = s + " \"" + c + p + "\" > /dev/ttyS1";
-  // char *cstr_coor = new char[str_coor.length() + 1];
-  // strcpy(cstr_coor, str_coor.c_str());
-  //
-  // if(system(NULL)) puts ("Ok");
-  //   else exit (EXIT_FAILURE);
-  // j = system(cstr_coor);
-  //
-  // int k;
-  // c = to_string(c2);
-  // p = to_string(r2);
-  // string str_coor2 = s + " \"" + c + p + "\" > /dev/ttyS1";
-  // char *cstr_coor2 = new char[str_coor2.length() + 1];
-  // strcpy(cstr_coor2, str_coor2.c_str());
-  //
-  // if(system(NULL)) puts ("Ok");
-  //   else exit (EXIT_FAILURE);
-  // k = system(cstr_coor2);
+  echo winning set of 2 coordinates
+  int j;
+  string s = "echo";
+  string c = to_string(c1);
+  string p = to_string(r1);
+  string str_coor = s + " \"" + c + p + "\" > /dev/ttyS1";
+  char *cstr_coor = new char[str_coor.length() + 1];
+  strcpy(cstr_coor, str_coor.c_str());
+
+  if(system(NULL)) puts ("Ok");
+    else exit (EXIT_FAILURE);
+  j = system(cstr_coor);
+
+  int k;
+  c = to_string(c2);
+  p = to_string(r2);
+  string str_coor2 = s + " \"" + c + p + "\" > /dev/ttyS1";
+  char *cstr_coor2 = new char[str_coor2.length() + 1];
+  strcpy(cstr_coor2, str_coor2.c_str());
+
+  if(system(NULL)) puts ("Ok");
+    else exit (EXIT_FAILURE);
+  k = system(cstr_coor2);
 }
